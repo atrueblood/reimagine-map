@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Map - DC Town</title>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        text-align: center;
+        width: 100vw;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        background-color: rgba(0, 255, 255, 0.009);
+      }
+      .parentContainer {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+      }
+      #map {
+        width: 90%;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="parentContainer">
+      <div class="">
+        <h1>INSTRUCTIONS</h1>
+        <p>
+          Please zoom in and click on your location within the map out area,
+          then click submit to goto airtable form to complete your survey.
+        </p>
+      </div>
+      <div id="map"></div>
+
+      <form id="airtable-form">
+        <input type="hidden" id="latitude" name="latitude" value="" />
+        <input type="hidden" id="longitude" name="longitude" value="" />
+        <button
+          type="submit"
+          style="
+            padding: 0.5rem 3rem;
+            border-radius: 24px;
+            margin-top: 1rem;
+            background-color: black;
+            color: white;
+          "
+        >
+          Submit
+        </button>
+      </form>
+    </section>
+    <script>
+      mapboxgl.accessToken =
+        "pk.eyJ1IjoicHN5Y2hlMDAxIiwiYSI6ImNsaGwxMHBkdjBsZW4zZHMxYWJnaTJ3Z2gifQ.s5X3LeuIgrWDjN5kvPQBXw";
+      const map = new mapboxgl.Map({
+        container: "map",
+        style: "mapbox://styles/mapbox/streets-v12",
+        center: [-77.0369, 38.9072],
+        zoom: 13,
+      });
+      let clickedFeature = null;
+      map.on("load", function () {
+        map.addSource("my-data", {
+          type: "geojson",
+          data: "mygeodata/Dc.geojson",
+        });
+
+        map.addLayer({
+          id: "my-layer",
+          type: "fill",
+          source: "my-data",
+          paint: {
+            "fill-color": ["rgba", 255, 0, 0, 0.05],
+            "fill-outline-color": ["rgba", 0, 0, 0, 1],
+          },
+        });
+
+        map.on("click", "my-layer", function (e) {
+          clickedFeature = e.features[0];
+
+          const latitude = e.lngLat.lat;
+          const longitude = e.lngLat.lng;
+
+          document.getElementById("latitude").value = latitude;
+          document.getElementById("longitude").value = longitude;
+          console.log(latitude);
+          console.log(longitude);
+        });
+      });
+      map.addControl(new mapboxgl.NavigationControl());
+      document
+        .getElementById("airtable-form")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const airtableURL =
+            "https://airtable.com/shr7cG92KGINBPZSJ?prefill_Latitude=" +
+            document.getElementById("latitude").value +
+            "&prefill_Longitude=" +
+            document.getElementById("longitude").value;
+          window.location.href = airtableURL;
+        });
+    </script>
+  </body>
+</html>
